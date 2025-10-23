@@ -1,4 +1,6 @@
-export type PaymentStatus = "pending" | "paid" | "overdue";
+export * from './types/cobranca.types';
+
+export type PaymentStatus = 'pending' | 'paid' | 'overdue';
 
 export interface Invoice {
   id: string;
@@ -9,9 +11,9 @@ export interface Invoice {
 }
 
 export const formatInvoiceSummary = (invoice: Invoice): string => {
-  const amount = invoice.totalAmount.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
+  const amount = invoice.totalAmount.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
   });
 
   return `${invoice.customerName} - ${amount} - vence em ${invoice.dueDate}`;

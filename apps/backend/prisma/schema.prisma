@@ -8,64 +8,79 @@ datasource db {
 }
 
 model t_usuarios {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  senha_hash     String
-  nome           String
-  ativo          Boolean  @default(true)
-  criado_em      DateTime @default(now())
-  atualizado_em  DateTime @updatedAt
-  clientes       t_clientes[]
-  cobrancas      t_cobrancas[]
+  id            String        @id @default(cuid())
+  email         String        @unique
+  senha_hash    String
+  nome          String
+  ativo         Boolean       @default(true)
+  criado_em     DateTime      @default(now())
+  atualizado_em DateTime      @updatedAt
+  clientes      t_clientes[]
+  cobrancas     t_cobrancas[]
 }
 
 model t_clientes {
-  id             String       @id @default(cuid())
-  usuario_id     String
-  nome           String
-  documento      String       @unique
-  email          String?
-  telefone       String?
-  criado_em      DateTime     @default(now())
-  atualizado_em  DateTime     @updatedAt
-  usuario        t_usuarios   @relation(fields: [usuario_id], references: [id])
-  cobrancas      t_cobrancas[]
+  id            String      @id @default(cuid())
+  usuario_id    String
+  nome          String
+  documento     String      @unique
+  email         String?
+  telefone      String?
+  criado_em     DateTime    @default(now())
+  atualizado_em DateTime    @updatedAt
+  usuario       t_usuarios  @relation(fields: [usuario_id], references: [id])
+  cobrancas     t_cobrancas[]
+
+  @@index([usuario_id], name: "idx_cliente_usuario")
 }
 
 model t_cobrancas {
-  id                String            @id @default(cuid())
+  id                String             @id @default(cuid())
   cliente_id        String
   usuario_id        String
   valor_centavos    Int
-  status            CobrancaStatus   @default(PENDENTE)
+  status            CobrancaStatus     @default(PENDENTE)
   vencimento        DateTime
   descricao         String?
   pago_em           DateTime?
-  criado_em         DateTime          @default(now())
-  atualizado_em     DateTime          @updatedAt
-  cliente           t_clientes        @relation(fields: [cliente_id], references: [id])
-  usuario           t_usuarios        @relation(fields: [usuario_id], references: [id])
+  webhook_id        String?            @unique
+  id_cobranca_erp   String?
+  criado_em         DateTime           @default(now())
+  atualizado_em     DateTime           @updatedAt
+  cliente           t_clientes         @relation(fields: [cliente_id], references: [id])
+  usuario           t_usuarios         @relation(fields: [usuario_id], references: [id])
   notificacoes_logs t_notificacoes_logs[]
+
+  @@index([cliente_id], name: "idx_cliente_id")
+  @@index([usuario_id], name: "idx_usuario_id")
+  @@index([status], name: "idx_status")
+  @@index([vencimento], name: "idx_vencimento")
 }
 
 model t_webhook_logs {
-  id            String   @id @default(cuid())
-  evento        String
-  payload       Json
-  status_code   Int
-  resposta      Json?
-  criado_em     DateTime @default(now())
+  id          String   @id @default(cuid())
+  webhook_id  String?  @unique
+  evento      String
+  payload     Json
+  status_code Int
+  resposta    Json?
+  duplicado   Boolean  @default(false)
+  criado_em   DateTime @default(now())
 }
 
 model t_notificacoes_logs {
-  id            String   @id @default(cuid())
-  cobranca_id   String
-  canal         String
-  destino       String
-  status        NotificacaoStatus @default(PENDENTE)
-  detalhes      String?
-  criado_em     DateTime @default(now())
-  cobranca      t_cobrancas @relation(fields: [cobranca_id], references: [id])
+  id           String             @id @default(cuid())
+  cobranca_id  String
+  canal        String
+  destino      String
+  status       NotificacaoStatus  @default(PENDENTE)
+  detalhes     String?
+  tentativa    Int                @default(1)
+  criado_em    DateTime           @default(now())
+  cobranca     t_cobrancas        @relation(fields: [cobranca_id], references: [id], onDelete: Cascade)
+
+  @@index([cobranca_id], name: "idx_cobranca_id")
+  @@index([status], name: "idx_status_envio")
 }
 
 enum CobrancaStatus {
@@ -78,6 +93,8 @@ enum NotificacaoStatus {
   PENDENTE
   ENVIADA
   FALHA
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique

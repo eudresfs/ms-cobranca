@@ -4,9 +4,8 @@ Este repositório reúne os componentes necessários para executar o microsservi
 
 ## Pré-requisitos
 
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/)
-- [Node.js 20+](https://nodejs.org/) e [pnpm](https://pnpm.io/) caso deseje executar os apps fora dos containers
+- [Node.js 20+](https://nodejs.org/) e npm 11+
+- [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/)
 
 ## Variáveis de ambiente
 
@@ -32,13 +31,30 @@ Para interromper os containers:
 docker compose down
 ```
 
+## Estrutura do monorepo
+
+```
+├── apps
+│   ├── backend        # API NestJS com autenticação JWT e Prisma
+│   └── frontend       # SPA React + Tailwind com fluxo de login protegido
+├── packages
+│   ├── shared-types   # Tipos e helpers compartilhados (ex.: invoices)
+│   ├── ui             # Componentes React reutilizáveis
+│   ├── eslint-config  # Configurações compartilhadas de ESLint
+│   └── typescript-config # Bases de tsconfig para os workspaces
+├── docker-compose.yml # Stack Postgres + Redis + Apps
+└── turbo.json         # Pipelines do Turborepo
+```
+
 ## Migrações do banco de dados
 
 O backend utiliza Prisma para gerenciamento do schema localizado em `apps/backend/prisma/schema.prisma`. Para criar a primeira migração execute dentro do container do backend ou localmente com as variáveis configuradas:
 
 ```bash
-pnpm install
-npx prisma migrate dev --name initial
+npm install
+cd apps/backend
+npm run prisma:migrate -- --name initial
+npm run prisma:generate
 ```
 
 O comando cria a pasta `prisma/migrations` com a estrutura inicial (`t_usuarios`, `t_clientes`, `t_cobrancas`, `t_webhook_logs`, `t_notificacoes_logs`).
@@ -54,18 +70,18 @@ Para remover volumes persistentes após testes:
 ```bash
 docker compose down -v
 ```
-Monorepo gerenciado com [Turborepo](https://turbo.build/repo) e workspaces NPM para o MVP de cobranças.
 
-## Estrutura
+## Execução local sem Docker
 
-- `apps/backend`: serviço Node.js em TypeScript com utilitários para listar cobranças de exemplo.
-- `apps/frontend`: aplicação TypeScript que reutiliza os tipos compartilhados para apresentar uma prévia das cobranças.
-- `packages/shared-types`: módulo com modelos e helpers de domínio reutilizados pelos apps.
-- `packages/ui`: componentes React reutilizáveis (incluídos do template original do Turborepo).
-- `packages/eslint-config`: configuração compartilhada do ESLint.
-- `packages/typescript-config`: configurações compartilhadas do TypeScript.
+```bash
+npm install
+npm run dev -- --filter=backend    # inicia o backend em modo watch na porta 3000
+npm run dev -- --filter=frontend   # inicia o frontend na porta 5173
+```
 
-## Scripts
+Cada workspace também aceita `npm install` individual caso precise trabalhar isoladamente.
+
+## Scripts úteis
 
 - `npm run dev` – Executa os scripts `dev` de todos os workspaces em modo watch.
 - `npm run build` – Gera os artefatos de build (`dist/`) para cada workspace.

@@ -1,6 +1,6 @@
 {
   "name": "@repo/shared-types",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -15,6 +15,6 @@
     "@repo/typescript-config": "*",
     "@types/node": "^22.15.3",
     "eslint": "^9.34.0",
-    "typescript": "5.9.2"
+    "typescript": "~5.9.2"
   }
 }

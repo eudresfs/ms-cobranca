@@ -1,15 +1,17 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "@repo/frontend",
+  "version": "0.0.1",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write ."
   },
   "dependencies": {
+    "@repo/shared-types": "*",
     "@tanstack/react-query": "^5.90.5",
     "axios": "^1.12.2",
     "react": "^19.2.0",
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
+    "@tailwindcss/forms": "^0.5.9",
     "@types/node": "^24.8.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
@@ -29,28 +32,10 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.4.0",
     "postcss": "^8.5.6",
+    "prettier": "^3.4.2",
     "tailwindcss": "^3.4.18",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.1",
     "vite": "^7.1.10"
-  "name": "@repo/frontend",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "tsx watch src/main.ts",
-    "build": "tsc --project tsconfig.json",
-    "lint": "eslint .",
-    "check-types": "tsc --noEmit --project tsconfig.json"
-  },
-  "dependencies": {
-    "@repo/shared-types": "*"
-  },
-  "devDependencies": {
-    "@repo/eslint-config": "*",
-    "@repo/typescript-config": "*",
-    "@types/node": "^22.15.3",
-    "eslint": "^9.34.0",
-    "tsx": "^4.19.2",
-    "typescript": "5.9.2"
   }
 }
