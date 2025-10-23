@@ -1,61 +1,68 @@
-version: '3.8'
+
+version: '3.9'
 
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: cobrancas-db
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: cobrancas
+      POSTGRES_DB: ${POSTGRES_DB:-ms_cobranca}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - '5432:5432'
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: cobrancas-redis
     ports:
-      - '6379:6379'
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - redis_data:/data
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: ./apps/backend
       dockerfile: Dockerfile
-    container_name: cobrancas-backend
+    env_file:
+      - ./.env
+      - ./apps/backend/.env
     depends_on:
-      - postgres
-      - redis
-    environment:
-      DATABASE_URL: postgresql://user:password@postgres:5432/cobrancas
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      BETTER_AUTH_SECRET: dev-secret-key-change-in-prod
-      PORT: 3001
-    ports:
-      - '3001:3001'
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
-      - ./apps/backend/src:/app/src
+      - ./apps/backend:/app
     command: npm run dev
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
 
   frontend:
     build:
       context: ./apps/frontend
       dockerfile: Dockerfile
-    container_name: cobrancas-frontend
+    env_file:
+      - ./.env
+      - ./apps/frontend/.env
     depends_on:
       - backend
-    environment:
-      VITE_API_URL: http://localhost:3001
-    ports:
-      - '3000:3000'
     volumes:
-      - ./apps/frontend/src:/app/src
-    command: npm run dev
+      - ./apps/frontend:/app
+    command: npm run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT:-5173}
+    ports:
+      - "${FRONTEND_PORT:-5173}:${FRONTEND_PORT:-5173}"
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres-data:
+  redis-data:

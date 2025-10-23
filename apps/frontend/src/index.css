@@ -1,7 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
+html,
+body,
+#root {
+  @apply h-full bg-slate-950 text-slate-100 font-sans;
+}
+
+body {
+  @apply antialiased;
+}
+
+a {
+  @apply text-primary-400 transition-colors duration-200;
+}
+
+a:hover {
+  @apply text-primary-300;
 }

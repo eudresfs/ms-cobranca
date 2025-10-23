@@ -1,84 +1,99 @@
-# Gestão de Cobranças - Monorepo
+# ms-cobranca
 
-Monorepo TurboRepo que reúne o backend em NestJS, frontend em React e pacotes compartilhados para o MVP de Gestão de Cobranças.
-
-## Estrutura
-
-```
-├── apps
-│   ├── backend        # API NestJS com autenticação via better-auth
-│   └── frontend       # SPA React + Tailwind para login
-├── packages
-│   └── shared-types   # Tipos TypeScript compartilhados
-├── docker-compose.yml # Postgres, Redis, Backend e Frontend
-├── turbo.json         # Pipeline TurboRepo
-└── package.json       # Workspaces npm
-```
+Este repositório reúne os componentes necessários para executar o microsserviço de cobrança em modo de desenvolvimento com suporte a containers.
 
 ## Pré-requisitos
 
-- Node.js 20+
-- npm 10+
-- Docker e Docker Compose (para infraestrutura)
+- [Node.js 20+](https://nodejs.org/) e npm 11+
+- [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/)
 
-## Instalação
+## Variáveis de ambiente
+
+Três arquivos de exemplo estão disponíveis e devem ser copiados para `.env` correspondentes antes da primeira execução:
+
+- `cp .env.example .env`
+- `cp apps/backend/.env.example apps/backend/.env`
+- `cp apps/frontend/.env.example apps/frontend/.env`
+
+As variáveis definem as conexões com Postgres, Redis, URLs do backend e chaves utilizadas pela autenticação (`BETTER_AUTH_SECRET`) e webhooks.
+
+## Subindo os containers
+
+```bash
+docker compose up --build
+```
+
+O comando acima inicializa os serviços de Postgres, Redis, backend (porta 3000) e frontend (porta 5173) conforme descrito no `docker-compose.yml`.
+
+Para interromper os containers:
+
+```bash
+docker compose down
+```
+
+## Estrutura do monorepo
+
+```
+├── apps
+│   ├── backend        # API NestJS com autenticação JWT e Prisma
+│   └── frontend       # SPA React + Tailwind com fluxo de login protegido
+├── packages
+│   ├── shared-types   # Tipos e helpers compartilhados (ex.: invoices)
+│   ├── ui             # Componentes React reutilizáveis
+│   ├── eslint-config  # Configurações compartilhadas de ESLint
+│   └── typescript-config # Bases de tsconfig para os workspaces
+├── docker-compose.yml # Stack Postgres + Redis + Apps
+└── turbo.json         # Pipelines do Turborepo
+```
+
+## Migrações do banco de dados
+
+O backend utiliza Prisma para gerenciamento do schema localizado em `apps/backend/prisma/schema.prisma`. Para criar a primeira migração execute dentro do container do backend ou localmente com as variáveis configuradas:
 
 ```bash
 npm install
-npm run dev -- --filter=backend  # executa backend em modo watch
-npm run dev -- --filter=frontend # executa frontend em modo dev
-```
-
-Cada workspace também possui `npm install` próprio caso precise trabalhar isoladamente.
-
-## Variáveis de Ambiente
-
-Copie `.env.example` da raiz e ajuste conforme necessário. O backend também possui `apps/backend/.env.example` com variáveis específicas.
-
-## Executando com Docker
-
-```bash
-docker-compose up --build
-```
-
-Serviços:
-- Backend: http://localhost:3001
-- Frontend: http://localhost:3000
-- Postgres: localhost:5432 (user/password)
-- Redis: localhost:6379
-
-## Migrations Prisma
-
-```bash
 cd apps/backend
 npm run prisma:migrate -- --name initial
 npm run prisma:generate
 ```
 
-## Fluxo de Autenticação
+O comando cria a pasta `prisma/migrations` com a estrutura inicial (`t_usuarios`, `t_clientes`, `t_cobrancas`, `t_webhook_logs`, `t_notificacoes_logs`).
 
-1. Registrar usuário:
-   ```bash
-   curl -X POST http://localhost:3001/auth/registro \
-     -H "Content-Type: application/json" \
-     -d '{"email":"admin@test.com","senha":"senha123","nome":"Admin"}'
-   ```
-2. Fazer login:
-   ```bash
-   curl -X POST http://localhost:3001/auth/login \
-     -H "Content-Type: application/json" \
-     -d '{"email":"admin@test.com","senha":"senha123"}'
-   ```
-3. Informar o token retornado no frontend (armazenado em `localStorage`).
+## Testes de autenticação
+
+Após subir os containers, utilize uma ferramenta HTTP (como cURL ou Insomnia) para testar os endpoints protegidos do backend utilizando a `BETTER_AUTH_SECRET` configurada. Garanta que o frontend aponte para `VITE_API_URL=http://localhost:3000` para validar o fluxo completo.
+
+## Limpeza
+
+Para remover volumes persistentes após testes:
+
+```bash
+docker compose down -v
+```
+
+## Execução local sem Docker
+
+```bash
+npm install
+npm run dev -- --filter=backend    # inicia o backend em modo watch na porta 3000
+npm run dev -- --filter=frontend   # inicia o frontend na porta 5173
+```
+
+Cada workspace também aceita `npm install` individual caso precise trabalhar isoladamente.
 
 ## Scripts úteis
 
-- `npm run dev` - Executa pipelines de desenvolvimento com Turbo.
-- `npm run build` - Build para todos os workspaces.
-- `npm run lint` - Lint em todos os pacotes.
+- `npm run dev` – Executa os scripts `dev` de todos os workspaces em modo watch.
+- `npm run build` – Gera os artefatos de build (`dist/`) para cada workspace.
+- `npm run lint` – Executa o ESLint em todos os pacotes.
+- `npm run check-types` – Checagem de tipos com o TypeScript em todos os pacotes.
+- `npm run format` – Formata arquivos `.ts`, `.tsx` e `.md` com Prettier.
 
-## Próximos Passos
+## Como começar
 
-- Implementar módulo de webhook e deduplicação.
-- Configurar filas BullMQ e integrações Evolution.
-- Criar dashboard no frontend.
+```bash
+npm install
+npm run build
+```
+
+Os builds geram saídas em `dist/`, ignoradas pelo Git através do `.gitignore` na raiz.

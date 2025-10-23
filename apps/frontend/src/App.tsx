@@ -1,32 +1,17 @@
-import { useEffect, useState } from 'react';
-import { Login } from './pages/Login';
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { Login } from './pages/Login'
+import { ProtectedRoute } from './routes/ProtectedRoute'
+import { Dashboard } from './pages/Dashboard'
 
-function App() {
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    setToken(localStorage.getItem('token'));
-  }, []);
-
-  if (!token) {
-    return <Login onAuthenticated={setToken} />;
-  }
-
+export default function App() {
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">Bem-vindo!</h1>
-      <p>Dashboard (será implementado em M5)</p>
-      <button
-        onClick={() => {
-          localStorage.removeItem('token');
-          setToken(null);
-        }}
-        className="mt-4 bg-red-500 text-white p-2 rounded"
-      >
-        Logout
-      </button>
-    </div>
-  );
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  )
 }
-
-export default App;

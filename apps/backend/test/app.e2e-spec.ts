@@ -1,8 +1,9 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 
-describe('AppModule (e2e)', () => {
+describe('AppController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -18,7 +19,7 @@ describe('AppModule (e2e)', () => {
     await app.close();
   });
 
-  it('should bootstrap the application', () => {
-    expect(app).toBeDefined();
+  it('/ (GET)', async () => {
+    await request(app.getHttpServer()).get('/').expect(200).expect('Hello World!');
   });
 });

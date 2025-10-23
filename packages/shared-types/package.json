@@ -1,14 +1,20 @@
 {
-  "name": "@cobrancas/shared-types",
+  "name": "@repo/shared-types",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc --project tsconfig.json",
+    "lint": "eslint .",
+    "check-types": "tsc --noEmit --project tsconfig.json"
   },
   "devDependencies": {
-    "typescript": "^5.7.3"
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/node": "^22.15.3",
+    "eslint": "^9.34.0",
+    "typescript": "~5.9.2"
   }
 }
