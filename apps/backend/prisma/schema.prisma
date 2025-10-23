@@ -7,6 +7,77 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model t_usuarios {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  senha_hash     String
+  nome           String
+  ativo          Boolean  @default(true)
+  criado_em      DateTime @default(now())
+  atualizado_em  DateTime @updatedAt
+  clientes       t_clientes[]
+  cobrancas      t_cobrancas[]
+}
+
+model t_clientes {
+  id             String       @id @default(cuid())
+  usuario_id     String
+  nome           String
+  documento      String       @unique
+  email          String?
+  telefone       String?
+  criado_em      DateTime     @default(now())
+  atualizado_em  DateTime     @updatedAt
+  usuario        t_usuarios   @relation(fields: [usuario_id], references: [id])
+  cobrancas      t_cobrancas[]
+}
+
+model t_cobrancas {
+  id                String            @id @default(cuid())
+  cliente_id        String
+  usuario_id        String
+  valor_centavos    Int
+  status            CobrancaStatus   @default(PENDENTE)
+  vencimento        DateTime
+  descricao         String?
+  pago_em           DateTime?
+  criado_em         DateTime          @default(now())
+  atualizado_em     DateTime          @updatedAt
+  cliente           t_clientes        @relation(fields: [cliente_id], references: [id])
+  usuario           t_usuarios        @relation(fields: [usuario_id], references: [id])
+  notificacoes_logs t_notificacoes_logs[]
+}
+
+model t_webhook_logs {
+  id            String   @id @default(cuid())
+  evento        String
+  payload       Json
+  status_code   Int
+  resposta      Json?
+  criado_em     DateTime @default(now())
+}
+
+model t_notificacoes_logs {
+  id            String   @id @default(cuid())
+  cobranca_id   String
+  canal         String
+  destino       String
+  status        NotificacaoStatus @default(PENDENTE)
+  detalhes      String?
+  criado_em     DateTime @default(now())
+  cobranca      t_cobrancas @relation(fields: [cobranca_id], references: [id])
+}
+
+enum CobrancaStatus {
+  PENDENTE
+  PAGA
+  CANCELADA
+}
+
+enum NotificacaoStatus {
+  PENDENTE
+  ENVIADA
+  FALHA
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
