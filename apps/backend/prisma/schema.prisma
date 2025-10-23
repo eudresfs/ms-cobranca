@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model t_usuarios {
+  id            String          @id @default(uuid())
+  email         String          @unique @db.VarChar(255)
+  senha_hash    String          @db.VarChar(255)
+  nome          String          @db.VarChar(255)
+  ativo         Boolean         @default(true)
+  criado_em     DateTime        @default(now())
+  atualizado_em DateTime        @updatedAt
+
+  cobrancas     t_cobrancas[]
+}
+
+model t_clientes {
+  id            String          @id @default(uuid())
+  nome          String          @db.VarChar(255)
+  telefone      String          @db.VarChar(20)
+  email         String?         @db.VarChar(255)
+  criado_em     DateTime        @default(now())
+  atualizado_em DateTime        @updatedAt
+
+  cobrancas     t_cobrancas[]
+}
+
+model t_cobrancas {
+  id              String                 @id @default(uuid())
+  cliente_id      String
+  valor           Decimal                @db.Decimal(15, 2)
+  vencimento      DateTime               @db.Date
+  status          String                 @default("aberta") @db.VarChar(50)
+  webhook_id      String?                @unique @db.VarChar(255)
+  id_cobranca_erp String?                @db.VarChar(255)
+  criado_em       DateTime               @default(now())
+  atualizado_em   DateTime               @updatedAt
+
+  cliente       t_clientes              @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  notificacoes  t_notificacoes_logs[]
+
+  @@index([cliente_id], name: "idx_cliente_id")
+  @@index([status], name: "idx_status")
+  @@index([vencimento], name: "idx_vencimento")
+}
+
+model t_webhook_logs {
+  id         String   @id @default(uuid())
+  webhook_id String   @unique @db.VarChar(255)
+  payload    Json
+  duplicado  Boolean  @default(false)
+  criado_em  DateTime @default(now())
+}
+
+model t_notificacoes_logs {
+  id           String       @id @default(uuid())
+  cobranca_id  String
+  telefone     String       @db.VarChar(20)
+  evento       String       @db.VarChar(50)
+  status_envio String       @db.VarChar(20)
+  erro_msg     String?
+  tentativa    Int          @default(1)
+  criado_em    DateTime     @default(now())
+
+  cobranca t_cobrancas @relation(fields: [cobranca_id], references: [id], onDelete: Cascade)
+
+  @@index([cobranca_id], name: "idx_cobranca_id")
+  @@index([status_envio], name: "idx_status_envio")
+}
